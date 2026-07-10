@@ -254,22 +254,22 @@ async function runSite(browser, site, phone) {
   try {
     ctx = await browser.newContext();
     const page = await ctx.newPage();
-    await page.goto(site.url, { waitUntil: site.waitUntil || "networkidle", timeout: 30000 });
+    await page.goto(site.url, { waitUntil: site.waitUntil || "networkidle", timeout: 60000 });
     for (const step of site.steps) {
       if (step.action === "fill") {
-        await page.waitForSelector(step.selector, { timeout: 15000 });
+        await page.waitForSelector(step.selector, { timeout: 30000 });
         const val = step.value || phone;
         await page.fill(step.selector, val);
       } else if (step.action === "click") {
-        await page.waitForSelector(step.selector, { timeout: 15000 });
+        await page.waitForSelector(step.selector, { timeout: 30000 });
         await page.click(step.selector);
       } else if (step.action === "wait") {
         await page.waitForTimeout(step.ms);
       } else if (step.action === "check") {
-        await page.waitForSelector(step.selector, { timeout: 15000 });
+        await page.waitForSelector(step.selector, { timeout: 30000 });
         await page.check(step.selector);
       } else if (step.action === "fill_phone") {
-        await page.waitForSelector(step.selector, { timeout: 15000 });
+        await page.waitForSelector(step.selector, { timeout: 30000 });
         await page.fill(step.selector, `+880${phone.slice(-10)}`);
       } else if (step.action === "wait_turnstile") {
         await page.waitForTimeout(5000);
@@ -277,11 +277,11 @@ async function runSite(browser, site, phone) {
       } else if (step.action === "goto") {
         await page.goto(step.url, { waitUntil: "networkidle", timeout: 30000 });
       } else if (step.action === "fill_rnd") {
-        await page.waitForSelector(step.selector, { timeout: 15000 });
+        await page.waitForSelector(step.selector, { timeout: 30000 });
         const val = `${step.prefix || ""}${Date.now()}${step.suffix || ""}`;
         await page.fill(step.selector, val);
       } else if (step.action === "select") {
-        await page.waitForSelector(step.selector, { timeout: 15000 });
+        await page.waitForSelector(step.selector, { timeout: 30000 });
         await page.selectOption(step.selector, step.value);
       } else if (step.action === "bishworang_forgot") {
         await page.evaluate((phone) => {
@@ -342,7 +342,7 @@ async function run(phone, count, delay) {
   const withTimeout = (p, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r("__TIMEOUT__"), ms))]);
   for (let i = 0; i < count; i++) {
     const results = await Promise.allSettled([
-      ...sites.map((site) => withTimeout(runSite(browser, site, phone), 60000)),
+      ...sites.map((site) => withTimeout(runSite(browser, site, phone), 90000)),
       withTimeout(sendBDTickets(phone), 15000),
       withTimeout(sendMedEasy(phone), 15000),
       withTimeout(sendRedX(phone), 15000),

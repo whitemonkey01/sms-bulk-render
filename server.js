@@ -335,16 +335,9 @@ async function runSite(browser, site, phone) {
   }
 }
 
+let browser;
+
 async function run(phone, count, delay) {
-  const browser = await chromium.launch({
-    headless: true,
-    executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/chromium",
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-    ],
-  });
   for (let i = 0; i < count; i++) {
     const results = await Promise.allSettled([
       ...sites.map((site) => runSite(browser, site, phone)),
@@ -362,7 +355,6 @@ async function run(phone, count, delay) {
       await new Promise((r) => setTimeout(r, delay * 1000));
     }
   }
-  await browser.close();
 }
 
 app.get("/", (req, res) => {
@@ -411,4 +403,18 @@ app.post("/", async (req, res) => {
   res.end();
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+async function start() {
+  console.log("Launching Chromium...");
+  browser = await chromium.launch({
+    headless: true,
+    executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/chromium",
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+    ],
+  });
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+start();

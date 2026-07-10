@@ -250,9 +250,10 @@ const sites = [
 ];
 
 async function runSite(browser, site, phone) {
-  const ctx = await browser.newContext();
-  const page = await ctx.newPage();
+  let ctx;
   try {
+    ctx = await browser.newContext();
+    const page = await ctx.newPage();
     await page.goto(site.url, { waitUntil: site.waitUntil || "networkidle", timeout: 30000 });
     for (const step of site.steps) {
       if (step.action === "fill") {
@@ -330,7 +331,7 @@ async function runSite(browser, site, phone) {
   } catch (err) {
     return { name: site.name, status: "FAILED", error: err.message.split("\n")[0] };
   } finally {
-    await ctx.close();
+    if (ctx) await ctx.close();
   }
 }
 
@@ -342,9 +343,6 @@ async function run(phone, count, delay) {
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--single-process",
-      "--no-zygote",
     ],
   });
   for (let i = 0; i < count; i++) {

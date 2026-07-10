@@ -334,7 +334,7 @@ async function runSite(browser, site, phone) {
   }
 }
 
-async function run(phone, count, delay, write) {
+async function run(phone, count, delay) {
   const browser = await chromium.launch({
     headless: true,
     executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/chromium",
@@ -393,10 +393,6 @@ app.post("/", async (req, res) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.write(`<pre style="font-family:monospace;background:#f5f5f5;padding:20px;border-radius:8px">`);
 
-  const write = (msg) => {
-    res.write(msg + "\n");
-    origLog(msg);
-  };
   const origLog = console.log;
   console.log = (...args) => {
     const line = args.join(" ");
@@ -405,7 +401,7 @@ app.post("/", async (req, res) => {
   };
 
   try {
-    await run(phone, count, delay, write);
+    await run(phone, count, delay);
   } catch (e) {
     const err = "ERROR: " + e.message.split("\n")[0];
     res.write(err + "\n");

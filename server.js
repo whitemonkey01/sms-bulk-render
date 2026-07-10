@@ -339,17 +339,17 @@ let browser;
 let browserReady = false;
 
 async function run(phone, count, delay) {
-  const withTimeout = (p, name, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error(`${name} timed out`)), ms))]);
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r("__TIMEOUT__"), ms))]);
   for (let i = 0; i < count; i++) {
     const results = await Promise.allSettled([
-      ...sites.map((site) => withTimeout(runSite(browser, site, phone), site.name, 60000)),
-      withTimeout(sendBDTickets(phone), "BDTickets", 15000),
-      withTimeout(sendMedEasy(phone), "MedEasy", 15000),
-      withTimeout(sendRedX(phone), "RedX", 15000),
+      ...sites.map((site) => withTimeout(runSite(browser, site, phone), 60000)),
+      withTimeout(sendBDTickets(phone), 15000),
+      withTimeout(sendMedEasy(phone), 15000),
+      withTimeout(sendRedX(phone), 15000),
     ]);
     console.log(`[${i + 1}/${count}]`);
     for (const r of results) {
-      const v = r.value || {};
+      const v = r.status === "fulfilled" ? r.value : (r.reason === "__TIMEOUT__" ? { name: "Timeout", status: "FAILED", error: "timed out" } : { name: "Unknown", status: "FAILED", error: String(r.reason).split("\n")[0] });
       console.log(`  [${v.name}] ${v.status}${v.error ? " - " + v.error : ""}`);
     }
     if (i < count - 1 && delay > 0) {

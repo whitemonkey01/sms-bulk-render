@@ -338,6 +338,7 @@ async function run(phone, count, delay) {
   const browser = await chromium.launch({
     headless: true,
     executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/chromium",
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
   for (let i = 0; i < count; i++) {
     const results = await Promise.allSettled([

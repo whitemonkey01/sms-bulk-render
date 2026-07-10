@@ -334,11 +334,18 @@ async function runSite(browser, site, phone) {
   }
 }
 
-async function run(phone, count, delay) {
+async function run(phone, count, delay, write) {
   const browser = await chromium.launch({
     headless: true,
     executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/chromium",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--single-process",
+      "--no-zygote",
+    ],
   });
   for (let i = 0; i < count; i++) {
     const results = await Promise.allSettled([
@@ -383,21 +390,31 @@ app.post("/", async (req, res) => {
   const delay = parseInt(req.body.delay) || 3;
   if (!phone) return res.status(400).send("Phone required");
 
-  const chunks = [];
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.write(`<pre style="font-family:monospace;background:#f5f5f5;padding:20px;border-radius:8px">`);
+
+  const write = (msg) => {
+    res.write(msg + "\n");
+    origLog(msg);
+  };
   const origLog = console.log;
   console.log = (...args) => {
-    chunks.push(args.join(" "));
+    const line = args.join(" ");
+    res.write(line + "\n");
     origLog.apply(console, args);
   };
 
   try {
-    await run(phone, count, delay);
+    await run(phone, count, delay, write);
   } catch (e) {
-    chunks.push("ERROR: " + e.message.split("\n")[0]);
+    const err = "ERROR: " + e.message.split("\n")[0];
+    res.write(err + "\n");
+    origLog(err);
   }
 
   console.log = origLog;
-  res.send(`<pre style="font-family:monospace;background:#f5f5f5;padding:20px;border-radius:8px">${chunks.join("\n")}</pre><br><a href="/">Back</a>`);
+  res.write(`</pre><br><a href="/">Back</a>`);
+  res.end();
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -420,7 +420,7 @@ app.listen(PORT, () => {
   console.log("Launching Chromium...");
   chromium.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
   }).then(b => {
     browser = b;
     browserReady = true;

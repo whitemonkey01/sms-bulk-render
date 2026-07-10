@@ -339,12 +339,13 @@ let browser;
 let browserReady = false;
 
 async function run(phone, count, delay) {
+  const withTimeout = (p, name, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error(`${name} timed out`)), ms))]);
   for (let i = 0; i < count; i++) {
     const results = await Promise.allSettled([
-      ...sites.map((site) => runSite(browser, site, phone)),
-      sendBDTickets(phone),
-      sendMedEasy(phone),
-      sendRedX(phone),
+      ...sites.map((site) => withTimeout(runSite(browser, site, phone), site.name, 60000)),
+      withTimeout(sendBDTickets(phone), "BDTickets", 15000),
+      withTimeout(sendMedEasy(phone), "MedEasy", 15000),
+      withTimeout(sendRedX(phone), "RedX", 15000),
     ]);
     console.log(`[${i + 1}/${count}]`);
     for (const r of results) {
@@ -399,7 +400,10 @@ app.post("/", async (req, res) => {
   }
 
   try {
-    await run(phone, count, delay);
+    await Promise.race([
+      run(phone, count, delay),
+      new Promise((_, r) => setTimeout(r, 120000, new Error("Global timeout"))),
+    ]);
   } catch (e) {
     const err = "ERROR: " + e.message.split("\n")[0];
     res.write(err + "\n");

@@ -335,7 +335,10 @@ async function runSite(browser, site, phone) {
 }
 
 async function run(phone, count, delay) {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/chromium",
+  });
   for (let i = 0; i < count; i++) {
     const results = await Promise.allSettled([
       ...sites.map((site) => runSite(browser, site, phone)),

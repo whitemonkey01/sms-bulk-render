@@ -403,9 +403,10 @@ app.post("/", async (req, res) => {
   res.end();
 });
 
-async function start() {
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
   console.log("Launching Chromium...");
-  browser = await chromium.launch({
+  chromium.launch({
     headless: true,
     executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/chromium",
     args: [
@@ -413,8 +414,10 @@ async function start() {
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
     ],
+  }).then(b => {
+    browser = b;
+    console.log("Chromium ready");
+  }).catch(e => {
+    console.error("Chromium launch failed:", e.message);
   });
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}
-
-start();
+});

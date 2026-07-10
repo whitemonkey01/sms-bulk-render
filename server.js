@@ -349,7 +349,8 @@ async function run(phone, count, delay) {
     ]);
     console.log(`[${i + 1}/${count}]`);
     for (const r of results) {
-      const v = r.status === "fulfilled" ? r.value : (r.reason === "__TIMEOUT__" ? { name: "Timeout", status: "FAILED", error: "timed out" } : { name: "Unknown", status: "FAILED", error: String(r.reason).split("\n")[0] });
+      let v = r.status === "fulfilled" ? r.value : (r.reason === "__TIMEOUT__" ? { name: "Timeout", status: "FAILED", error: "timed out" } : { name: "Unknown", status: "FAILED", error: String(r.reason).split("\n")[0] });
+      if (typeof v === "string") v = { name: "API", status: v };
       console.log(`  [${v.name}] ${v.status}${v.error ? " - " + v.error : ""}`);
     }
     if (i < count - 1 && delay > 0) {

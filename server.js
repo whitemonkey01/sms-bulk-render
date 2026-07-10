@@ -336,6 +336,7 @@ async function runSite(browser, site, phone) {
 }
 
 let browser;
+let browserReady = false;
 
 async function run(phone, count, delay) {
   for (let i = 0; i < count; i++) {
@@ -390,6 +391,13 @@ app.post("/", async (req, res) => {
     origLog.apply(console, args);
   };
 
+  if (!browser) {
+    res.write(!browserReady ? "Chromium is still launching, try again in a moment...\n" : "Chromium failed to launch\n");
+    res.write(`</pre><br><a href="/">Back</a>`);
+    res.end();
+    return;
+  }
+
   try {
     await run(phone, count, delay);
   } catch (e) {
@@ -416,6 +424,7 @@ app.listen(PORT, () => {
     ],
   }).then(b => {
     browser = b;
+    browserReady = true;
     console.log("Chromium ready");
   }).catch(e => {
     console.error("Chromium launch failed:", e.message);

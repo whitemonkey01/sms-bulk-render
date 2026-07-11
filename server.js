@@ -362,26 +362,22 @@ async function run(phone, count, delay) {
   for (let i = 0; i < count; i++) {
     console.log(`[${i + 1}/${count}]`);
 
-    const apiPromises = apiSites.map(s => runApiSite(s));
-
-    const CONCURRENCY = 3;
-    const results = [];
-    for (let start = 0; start < browserSites.length; start += CONCURRENCY) {
-      const batch = browserSites.slice(start, start + CONCURRENCY).map(s => runBrowserSite(s));
-      const batchResults = await Promise.allSettled(batch);
-      for (const r of batchResults) {
-        if (r.status === "fulfilled") results.push(r.value);
+    const queue = browserSites.slice();
+    async function worker() {
+      while (queue.length) {
+        const site = queue.shift();
+        const r = await runBrowserSite(site);
+        console.log(`  [${r.name}] ${r.status}${r.error ? " - " + r.error : ""}`);
       }
     }
 
-    const apiResults = await Promise.allSettled(apiPromises);
-    for (const r of apiResults) {
-      if (r.status === "fulfilled") results.push(r.value);
-    }
-
-    for (const v of results) {
-      console.log(`  [${v.name}] ${v.status}${v.error ? " - " + v.error : ""}`);
-    }
+    await Promise.all([
+      worker(), worker(), worker(),
+      ...apiSites.map(async site => {
+        const r = await runApiSite(site);
+        console.log(`  [${r.name}] ${r.status}${r.error ? " - " + r.error : ""}`);
+      }),
+    ]);
 
     if (i < count - 1 && delay > 0) {
       console.log(`  Waiting ${delay}s ...`);

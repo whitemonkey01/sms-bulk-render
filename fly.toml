@@ -28,4 +28,4 @@ primary_region = 'iad'
   cpus = 12
   memory_mb = 39936
   processes = ['app']
-  size = 'performance-cpu-12x'
+  size = 'performance-16x'

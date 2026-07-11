@@ -366,17 +366,13 @@ async function run(phone, count, delay) {
   for (let i = 0; i < count; i++) {
     console.log(`[${i + 1}/${count}]`);
 
-    const queue = enabledBrowser.slice();
-    async function worker() {
-      while (queue.length) {
-        const site = queue.shift();
-        const r = await runBrowserSite(site);
-        console.log(`  [${r.name}] ${r.status}${r.error ? " - " + r.error : ""}`);
-      }
-    }
-
     await Promise.all([
-      worker(), worker(), worker(),
+      (async () => {
+        for (const site of enabledBrowser) {
+          const r = await runBrowserSite(site);
+          console.log(`  [${r.name}] ${r.status}${r.error ? " - " + r.error : ""}`);
+        }
+      })(),
       ...enabledApi.map(async site => {
         const r = await runApiSite(site);
         console.log(`  [${r.name}] ${r.status}${r.error ? " - " + r.error : ""}`);

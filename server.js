@@ -363,15 +363,22 @@ async function run(phone, count, delay) {
     return v;
   }
 
+  const CONCURRENCY = process.env.FLY_MACHINE_ID ? 5 : 1;
+
   for (let i = 0; i < count; i++) {
     console.log(`[${i + 1}/${count}]`);
 
     await Promise.all([
       (async () => {
-        for (const site of enabledBrowser) {
-          const r = await runBrowserSite(site);
-          console.log(`  [${r.name}] ${r.status}${r.error ? " - " + r.error : ""}`);
+        const queue = enabledBrowser.slice();
+        async function worker() {
+          while (queue.length) {
+            const site = queue.shift();
+            const r = await runBrowserSite(site);
+            console.log(`  [${r.name}] ${r.status}${r.error ? " - " + r.error : ""}`);
+          }
         }
+        await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
       })(),
       ...enabledApi.map(async site => {
         const r = await runApiSite(site);

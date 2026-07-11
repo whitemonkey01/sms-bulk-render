@@ -1,31 +1,20 @@
-# fly.toml app configuration file generated for sms-bulk-render on 2026-07-11T18:37:18Z
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
-app = 'sms-bulk-render'
-primary_region = 'iad'
+app = "sms-bulk-render"
+primary_region = "iad"
 
 [build]
+  dockerfile = "Dockerfile"
 
 [http_service]
-  internal_port = 8080
+  internal_port = 7860
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = false
   auto_start_machines = true
-  min_machines_running = 0
-  processes = ['app']
+  min_machines_running = 1
+  processes = ["app"]
 
 [[vm]]
-  memory = '1gb'
-  cpu_kind = 'shared'
-  cpus = 1
-  memory_mb = 256
-
-[[vm]]
-  memory = '39gb'
-  cpu_kind = 'performance'
+  size = "performance-16x"
+  memory = "39gb"
+  cpu_kind = "performance"
   cpus = 12
-  memory_mb = 39936
-  processes = ['app']
-  size = 'performance-16x'
+  processes = ["app"]

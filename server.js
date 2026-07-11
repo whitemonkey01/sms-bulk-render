@@ -393,16 +393,27 @@ async function run(phone, count, delay) {
 const fs = require("fs");
 const CONFIG_PATH = process.env.SMS_WEB_CONFIG || "/app/config.json";
 
-function loadDisabled() {
-  try { return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8")).disabled || []; } catch { return []; }
+let lastResults = [];
+
+function loadConfig() {
+  try { return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8")); } catch { return {}; }
 }
 
-function saveDisabled(list) {
+function saveConfig(data) {
   try {
     const dir = require("path").dirname(CONFIG_PATH);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify({ disabled: [...new Set(list)] }, null, 2));
+    const existing = loadConfig();
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify({ ...existing, ...data }, null, 2));
   } catch {}
+}
+
+function loadDisabled() {
+  return loadConfig().disabled || [];
+}
+
+function saveDisabled(list) {
+  saveConfig({ disabled: [...new Set(list)] });
 }
 
 const allSites = [
@@ -420,6 +431,7 @@ app.get("/status", (req, res) => {
 
 app.get("/", (req, res) => {
   const disabled = loadDisabled();
+  const lastRun = lastResults.length ? `<h2>Last Run</h2><pre>${lastResults.join("\n")}</pre>` : "";
   const siteRows = allSites.map(name => {
     const isDisabled = disabled.includes(name);
     return `<div class="site"><span class="name">${name}</span><span class="status ${isDisabled ? 'disabled' : 'enabled'}">[${isDisabled ? 'DISABLED' : 'ENABLED'}]</span><form method="POST" action="/toggle"><input type="hidden" name="name" value="${name}"><button type="submit">${isDisabled ? 'Enable' : 'Disable'}</button></form></div>`;
@@ -433,6 +445,7 @@ app.get("/", (req, res) => {
       <input name="delay" value="3" style="width:50px">
       <button type="submit">Run</button>
     </form>
+    ${lastRun}
     <hr>
     <h2>Sites</h2>
     ${siteRows}
@@ -462,8 +475,10 @@ app.post("/", async (req, res) => {
   res.write(`<pre style="font-family:monospace;background:#f5f5f5;padding:20px;border-radius:8px">`);
 
   const origLog = console.log;
+  const lines = [];
   console.log = (...args) => {
     const line = args.join(" ");
+    lines.push(line);
     res.write(line + "\n");
     origLog.apply(console, args);
   };
@@ -482,11 +497,14 @@ app.post("/", async (req, res) => {
     ]);
   } catch (e) {
     const err = "ERROR: " + e.message.split("\n")[0];
+    lines.push(err);
     res.write(err + "\n");
     origLog(err);
   }
 
   console.log = origLog;
+  lastResults = lines;
+  saveConfig({ lastResults: lines });
   res.write(`</pre><br><a href="/">Back</a>`);
   res.end();
 });

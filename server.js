@@ -345,36 +345,42 @@ async function runSite(site, phone) {
 async function run(phone, count, delay) {
   const withTimeout = (p, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r("__TIMEOUT__"), ms))]);
 
+  async function runApiSite(site) {
+    const v = await withTimeout(site.fn(phone), 15000);
+    if (v === "__TIMEOUT__") return { name: site.name, status: "FAILED", error: "timed out" };
+    const status = v === "DONE" ? "DONE" : v.startsWith("HTTP") ? v : "FAILED";
+    const error = v !== "DONE" && !v.startsWith("HTTP") ? v : undefined;
+    return { name: site.name, status, error };
+  }
+
+  async function runBrowserSite(site) {
+    const v = await withTimeout(runSite(site, phone), 60000);
+    if (v === "__TIMEOUT__") return { name: site.name, status: "FAILED", error: "timed out" };
+    return v;
+  }
+
   for (let i = 0; i < count; i++) {
     console.log(`[${i + 1}/${count}]`);
 
-    for (const site of browserSites) {
-      const v = await withTimeout(runSite(site, phone), 60000);
-      if (v === "__TIMEOUT__") {
-        console.log(`  [${site.name}] FAILED - timed out`);
-      } else {
-        console.log(`  [${v.name}] ${v.status}${v.error ? " - " + v.error : ""}`);
+    const apiPromises = apiSites.map(s => runApiSite(s));
+
+    const CONCURRENCY = 3;
+    const results = [];
+    for (let start = 0; start < browserSites.length; start += CONCURRENCY) {
+      const batch = browserSites.slice(start, start + CONCURRENCY).map(s => runBrowserSite(s));
+      const batchResults = await Promise.allSettled(batch);
+      for (const r of batchResults) {
+        if (r.status === "fulfilled") results.push(r.value);
       }
     }
 
-    const apiResults = await Promise.allSettled(
-      apiSites.map((site) => withTimeout(site.fn(phone), 15000))
-    );
-    for (let idx = 0; idx < apiResults.length; idx++) {
-      const r = apiResults[idx];
-      const name = apiSites[idx].name;
-      if (r.status === "fulfilled") {
-        const v = r.value;
-        if (v === "__TIMEOUT__") {
-          console.log(`  [${name}] FAILED - timed out`);
-        } else {
-          const status = v === "DONE" ? "DONE" : v.startsWith("HTTP") ? v : "FAILED";
-          const error = v !== "DONE" && !v.startsWith("HTTP") ? v : undefined;
-          console.log(`  [${name}] ${status}${error ? " - " + error : ""}`);
-        }
-      } else {
-        console.log(`  [${name}] FAILED - ${String(r.reason).split("\n")[0]}`);
-      }
+    const apiResults = await Promise.allSettled(apiPromises);
+    for (const r of apiResults) {
+      if (r.status === "fulfilled") results.push(r.value);
+    }
+
+    for (const v of results) {
+      console.log(`  [${v.name}] ${v.status}${v.error ? " - " + v.error : ""}`);
     }
 
     if (i < count - 1 && delay > 0) {

@@ -435,7 +435,6 @@ app.listen(PORT, () => {
   console.log("Launching Chromium...");
   chromium.launch({
     headless: true,
-    executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/chromium",
     args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
   }).then(b => {
     browser = b;

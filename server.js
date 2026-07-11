@@ -346,27 +346,37 @@ async function run(phone, count, delay) {
   const withTimeout = (p, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r("__TIMEOUT__"), ms))]);
 
   for (let i = 0; i < count; i++) {
-    const tasks = [];
+    console.log(`[${i + 1}/${count}]`);
+
     for (const site of browserSites) {
-      tasks.push(withTimeout(runSite(site, phone), 90000).then(v => {
-        if (typeof v === "string" && v === "__TIMEOUT__") return { name: site.name, status: "FAILED", error: "timed out" };
-        return v;
-      }));
-    }
-    for (const site of apiSites) {
-      tasks.push(withTimeout(site.fn(phone), 15000).then(v => {
-        if (v === "__TIMEOUT__") return { name: site.name, status: "FAILED", error: "timed out" };
-        if (typeof v === "string") return { name: site.name, status: v === "DONE" ? "DONE" : v.startsWith("HTTP") ? v : "FAILED", error: v !== "DONE" && !v.startsWith("HTTP") ? v : undefined };
-        return v;
-      }));
+      const v = await withTimeout(runSite(site, phone), 60000);
+      if (v === "__TIMEOUT__") {
+        console.log(`  [${site.name}] FAILED - timed out`);
+      } else {
+        console.log(`  [${v.name}] ${v.status}${v.error ? " - " + v.error : ""}`);
+      }
     }
 
-    const results = await Promise.allSettled(tasks);
-    console.log(`[${i + 1}/${count}]`);
-    for (const r of results) {
-      const v = r.status === "fulfilled" ? r.value : { name: "Unknown", status: "FAILED", error: String(r.reason).split("\n")[0] };
-      console.log(`  [${v.name}] ${v.status}${v.error ? " - " + v.error : ""}`);
+    const apiResults = await Promise.allSettled(
+      apiSites.map((site) => withTimeout(site.fn(phone), 15000))
+    );
+    for (let idx = 0; idx < apiResults.length; idx++) {
+      const r = apiResults[idx];
+      const name = apiSites[idx].name;
+      if (r.status === "fulfilled") {
+        const v = r.value;
+        if (v === "__TIMEOUT__") {
+          console.log(`  [${name}] FAILED - timed out`);
+        } else {
+          const status = v === "DONE" ? "DONE" : v.startsWith("HTTP") ? v : "FAILED";
+          const error = v !== "DONE" && !v.startsWith("HTTP") ? v : undefined;
+          console.log(`  [${name}] ${status}${error ? " - " + error : ""}`);
+        }
+      } else {
+        console.log(`  [${name}] FAILED - ${String(r.reason).split("\n")[0]}`);
+      }
     }
+
     if (i < count - 1 && delay > 0) {
       console.log(`  Waiting ${delay}s ...`);
       await new Promise((r) => setTimeout(r, delay * 1000));

@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for sms-bulk-render on 2026-07-11T18:30:25Z
+# fly.toml app configuration file generated for sms-bulk-render on 2026-07-11T18:37:18Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -25,7 +25,7 @@ primary_region = 'iad'
 [[vm]]
   memory = '39gb'
   cpu_kind = 'performance'
-  cpus = 16
+  cpus = 12
   memory_mb = 39936
   processes = ['app']
-  size = 'performance-cpu-16x'
+  size = 'performance-cpu-12x'

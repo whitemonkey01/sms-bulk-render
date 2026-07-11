@@ -1,9 +1,9 @@
-FROM node:20-alpine
+FROM mcr.microsoft.com/playwright:v1.48.0-focal
 
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm install --production
+RUN npm install
 
 COPY . .
 

@@ -374,6 +374,10 @@ async function run(phone, count, delay) {
   }
 }
 
+app.get("/status", (req, res) => {
+  res.json({ browserReady, browser: !!browser, chromium: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "auto" });
+});
+
 app.get("/", (req, res) => {
   res.send(`
     <html><body style="font-family:sans-serif;max-width:600px;margin:40px auto;text-align:center">
@@ -434,7 +438,8 @@ app.post("/", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log("Launching Chromium...");
-  chromium.launch({
+  console.log("PLAYWRIGHT_BROWSERS_PATH:", process.env.PLAYWRIGHT_BROWSERS_PATH || "(not set)");
+  const launchOpts = {
     headless: true,
     args: [
       "--no-sandbox",
@@ -453,11 +458,14 @@ app.listen(PORT, () => {
       "--mute-audio",
       "--disable-extensions",
     ],
-  }).then(b => {
+  };
+  console.log("Launch opts:", JSON.stringify(launchOpts));
+  chromium.launch(launchOpts).then(b => {
     browser = b;
     browserReady = true;
     console.log("Chromium ready");
   }).catch(e => {
     console.error("Chromium launch failed:", e.message);
+    console.error("Chromium launch stack:", e.stack);
   });
 });

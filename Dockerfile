@@ -1,9 +1,9 @@
-FROM mcr.microsoft.com/playwright:v1.48.0-focal
+FROM node:20-slim
 
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN npm install && npx playwright install chromium --with-deps
 
 COPY . .
 

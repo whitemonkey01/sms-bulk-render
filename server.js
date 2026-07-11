@@ -345,6 +345,10 @@ async function runSite(site, phone) {
 async function run(phone, count, delay) {
   const withTimeout = (p, ms) => Promise.race([p, new Promise((_, r) => setTimeout(() => r("__TIMEOUT__"), ms))]);
 
+  const disabled = loadDisabled();
+  const enabledBrowser = browserSites.filter(s => !disabled.includes(s.name));
+  const enabledApi = apiSites.filter(s => !disabled.includes(s.name));
+
   async function runApiSite(site) {
     const v = await withTimeout(site.fn(phone), 15000);
     if (v === "__TIMEOUT__") return { name: site.name, status: "FAILED", error: "timed out" };
@@ -362,7 +366,7 @@ async function run(phone, count, delay) {
   for (let i = 0; i < count; i++) {
     console.log(`[${i + 1}/${count}]`);
 
-    const queue = browserSites.slice();
+    const queue = enabledBrowser.slice();
     async function worker() {
       while (queue.length) {
         const site = queue.shift();
@@ -373,7 +377,7 @@ async function run(phone, count, delay) {
 
     await Promise.all([
       worker(), worker(), worker(),
-      ...apiSites.map(async site => {
+      ...enabledApi.map(async site => {
         const r = await runApiSite(site);
         console.log(`  [${r.name}] ${r.status}${r.error ? " - " + r.error : ""}`);
       }),
@@ -386,26 +390,66 @@ async function run(phone, count, delay) {
   }
 }
 
+const fs = require("fs");
+const CONFIG_PATH = process.env.SMS_WEB_CONFIG || "/app/config.json";
+
+function loadDisabled() {
+  try { return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8")).disabled || []; } catch { return []; }
+}
+
+function saveDisabled(list) {
+  try {
+    const dir = require("path").dirname(CONFIG_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify({ disabled: [...new Set(list)] }, null, 2));
+  } catch {}
+}
+
+const allSites = [
+  ...browserSites.map(s => s.name),
+  ...apiSites.map(s => s.name),
+];
+
+function htmlPage(title, body) {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:sans-serif;max-width:700px;margin:20px auto;padding:0 10px}h1{font-size:20px}.site{display:flex;align-items:center;padding:6px 0;border-bottom:1px solid #eee}.site form{margin:0}.site button{padding:4px 12px;border:1px solid #ccc;border-radius:4px;cursor:pointer;background:#fff}.site .name{flex:1}.site .status{font-size:12px;color:#666;margin-right:10px}.enabled{color:#090}.disabled{color:#c00}form.main{margin:20px 0}form.main input{padding:6px;font-size:14px;width:200px}form.main button{padding:6px 20px;font-size:14px;background:black;color:white;border:none;border-radius:4px;cursor:pointer}pre{font-size:12px}</style></head><body>${body}</body></html>`;
+}
+
 app.get("/status", (req, res) => {
-  res.json({ browserReady, browser: !!browser, chromium: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "auto" });
+  res.json({ browserReady, browser: !!browser });
 });
 
 app.get("/", (req, res) => {
-  res.send(`
-    <html><body style="font-family:sans-serif;max-width:600px;margin:40px auto;text-align:center">
+  const disabled = loadDisabled();
+  const siteRows = allSites.map(name => {
+    const isDisabled = disabled.includes(name);
+    return `<div class="site"><span class="name">${name}</span><span class="status ${isDisabled ? 'disabled' : 'enabled'}">[${isDisabled ? 'DISABLED' : 'ENABLED'}]</span><form method="POST" action="/toggle"><input type="hidden" name="name" value="${name}"><button type="submit">${isDisabled ? 'Enable' : 'Disable'}</button></form></div>`;
+  }).join("");
+
+  res.send(htmlPage("SMS-Web OTP", `
     <h1>SMS-Web OTP Sender</h1>
-    <form method="POST">
-      <label>Phone:</label><br>
-      <input name="phone" placeholder="017XXXXXXXX" style="width:250px;padding:8px"><br><br>
-      <label>Count:</label><br>
-      <input name="count" value="1" style="width:60px;padding:8px"><br><br>
-      <label>Delay (s):</label><br>
-      <input name="delay" value="3" style="width:60px;padding:8px"><br><br>
-      <button type="submit" style="padding:10px 30px;background:black;color:white;border:none;border-radius:6px;cursor:pointer">Run</button>
+    <form class="main" method="POST" action="/">
+      <input name="phone" placeholder="017XXXXXXXX" value="01775777774">
+      <input name="count" value="1" style="width:50px">
+      <input name="delay" value="3" style="width:50px">
+      <button type="submit">Run</button>
     </form>
-    <hr><p>Browser sites: Arogga, IqraLive, Apex4u, MedEasy, Chorki, Robi, MyGov, Sailor, LeraveCraze, Othoba, PizzaHutBD, Kimi, Ostad, Bishworang, Ilyn</p><p>API sites: MedEasy-API, RedX-API, BDTickets-API</p>
-    </body></html>
-  `);
+    <hr>
+    <h2>Sites</h2>
+    ${siteRows}
+  `));
+});
+
+app.post("/toggle", (req, res) => {
+  const name = req.body.name;
+  if (!name) return res.redirect("/");
+  let disabled = loadDisabled();
+  if (disabled.includes(name)) {
+    disabled = disabled.filter(n => n !== name);
+  } else {
+    disabled.push(name);
+  }
+  saveDisabled(disabled);
+  res.redirect("/");
 });
 
 app.post("/", async (req, res) => {
